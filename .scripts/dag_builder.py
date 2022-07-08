@@ -37,7 +37,7 @@ def get_dependencies(job_info):
 def run():
     depends_on = {}
     for job_id in jobs_ids:
-        job_info = get_job_info(job_id, '')
+        job_info = get_job_info(job_id, os.environ['BEARER_TOKEN'])
         dependencies = get_dependencies(job_info)
         depends_on[job_id] = dependencies
     pprint(depends_on)
