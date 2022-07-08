@@ -16,6 +16,6 @@ jobs:
           python-version: 3.9 #install the python needed
       - name: execute py script
         run: |
-          python dag_builder.py
+          python ./.scripts/dag_builder.py
         env:
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
