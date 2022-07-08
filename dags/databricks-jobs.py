@@ -1,0 +1,108 @@
+import json
+import logging
+from pprint import pprint
+from airflow.utils.task_group import TaskGroup
+from pendulum import datetime
+import requests
+import ast
+
+from airflow.decorators import task, dag
+from airflow.operators.empty import EmptyOperator
+from airflow.providers.http.hooks.http import HttpHook
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from astronomer.providers.http.sensors.http import HttpSensorAsync
+from airflow.exceptions import AirflowFailException
+
+# job_id = 552857564708371
+# job_id = 387060766748255
+job_id = 557501144019716
+
+
+def response_check(response: dict):
+    logging.info(response)
+
+    if response:
+        if ('result_state' in response['state']) and (response['state']['result_state'] == 'SUCCESS'):
+            return True
+        elif ('result_state' in response['state']) and (response['state']['result_state'] != 'SUCCESS'):
+            raise AirflowFailException(
+                f"result_state is {response['state']['result_state']} because {response['state']['state_message']}"
+            )
+    else:
+        return False
+
+
+@dag(
+    schedule_interval=None,
+    start_date=datetime(2022, 1, 1),
+    catchup=False,
+    tags=['example', 'databricks']
+)
+def databricks_job():
+    """
+    Executing and viewing your Databricks Jobs from Airflow
+    """
+
+    trigger_job = SimpleHttpOperator(
+        task_id='trigger_job',
+        method='POST',
+        http_conn_id='http_default',
+        endpoint='/api/2.1/jobs/run-now',
+        data=json.dumps({'job_id': job_id}),
+        response_filter=lambda response: response.json(),
+
+    )
+
+    get_run_info = SimpleHttpOperator(
+        task_id='get_run_info',
+        method='GET',
+        http_conn_id='http_default',
+        endpoint='/api/2.1/jobs/runs/get',
+        data="run_id={{ ti.xcom_pull(task_ids='trigger_job')['run_id'] }}",
+        response_filter=lambda response: {t['task_key']: {'run_id': t['run_id'], 'run_page_url': t['run_page_url']} for
+                                          t in response.json()['tasks']}
+    )
+
+    with TaskGroup(group_id='Databricks_Job_Tasks') as job_taskgroup:
+
+        http_hook = HttpHook(
+            method='GET',
+            http_conn_id='http_default',
+        )
+
+        response = http_hook.run(
+            endpoint='/api/2.1/jobs/get',
+            data=f"job_id={job_id}"
+        )
+
+        job_info = response.json()['settings']['tasks']
+
+        # TODO: Check for initial delay on sensor start/poke
+        # Create Airflow tasks from Databricks Tasks
+        db_tasks = {}
+        for db_task in job_info:
+            airflow_task = HttpSensorAsync(
+                task_id=db_task['task_key'],
+                http_conn_id='http_default',
+                method='GET',
+                endpoint='/api/2.1/jobs/runs/get',
+                request_params={
+                    "run_id": f"{{{{ ti.xcom_pull(task_ids='get_run_info')['{db_task['task_key']}']['run_id'] }}}}"},
+                response_check=lambda response: response_check(response.json()),
+                # exponential_backoff=True
+            )
+            db_tasks[db_task['task_key']] = airflow_task
+
+        # Generate task dependencies
+        for db_task in job_info:
+            if 'depends_on' in db_task:
+                for upstream in db_task['depends_on']:
+                    db_tasks[upstream['task_key']] >> db_tasks[db_task['task_key']]
+
+    trigger_job >> get_run_info >> job_taskgroup
+
+
+dag = databricks_job()
+
+# TODO: Test failure scenarios
+# TODO: Reruns with repair tracking/integration

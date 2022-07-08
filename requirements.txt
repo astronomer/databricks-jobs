@@ -1,0 +1,1 @@
+astronomer-providers==1.6.0
