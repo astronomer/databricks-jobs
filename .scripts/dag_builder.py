@@ -42,7 +42,7 @@ def run():
         depends_on[job_id] = dependencies
     pprint(depends_on)
 
-    with open('../include/jobs.json', 'w') as jobs_file:
+    with open('include/jobs.json', 'w') as jobs_file:
         jobs_file.write(json.dumps(depends_on))
 
 
