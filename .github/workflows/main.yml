@@ -22,3 +22,7 @@ jobs:
           python .scripts/dag_builder.py
         env:
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
+      - name: Commit and push job json
+        run: |
+          git commit -am "Automated report"
+          git push
