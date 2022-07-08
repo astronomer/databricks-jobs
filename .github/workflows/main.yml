@@ -24,5 +24,7 @@ jobs:
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
       - name: Commit and push job json
         run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
           git commit -am "Automated report"
           git push
