@@ -16,8 +16,6 @@ jobs:
           python-version: 3.9 #install the python needed
       - name: install packages
         run: pip install requests==2.28.1
-      - name: remove job json
-        run: rm -rf include/jobs.json
       - name: execute py script
         run: python .scripts/dag_builder.py
         env:
