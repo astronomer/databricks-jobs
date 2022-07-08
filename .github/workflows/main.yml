@@ -29,6 +29,7 @@ jobs:
           git config user.email "<>"
           git add include/jobs.json
           git commit -m "Update jobs json on push"
+          continue-on-error: true
       - name: Check on failures
         if: steps.git-commit.outcome == 'success'
         run : git push
