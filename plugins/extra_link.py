@@ -1,22 +1,29 @@
+import logging
+from typing import Optional
+
 from airflow.plugins_manager import AirflowPlugin
 from airflow.models.baseoperator import BaseOperatorLink
 from airflow.models.xcom import XCom
 from airflow.models.taskinstance import TaskInstance
+from airflow.models.renderedtifields import RenderedTaskInstanceFields
 from astronomer.providers.http.sensors.http import HttpSensorAsync
+from sensors.DatabricksHttpSensorAsync import DatabricksHttpSensorAsync
+from airflow.settings import Session
+from airflow.utils.context import Context
 
 
-class DatabricksLogLink(BaseOperatorLink):
+class DatabricksRunLink(BaseOperatorLink):
     name = "Databricks Task"
 
-    # Add list of all the operators to which you want to add this OperatorLinks
-    # Example: operators = [GCSToS3Operator, GCSToBigQueryOperator]
-    operators = [HttpSensorAsync]
+    operators = [HttpSensorAsync, DatabricksHttpSensorAsync]
 
-# TODO: get run link working
-    def get_link(self, operator, *, ti_key):
-        # task_id = ti_key.task_id
-        # run_page_url = XCom.get_one(task_id='get_run_info')[ti_key.task_id.split('.')[-1]]['run_page_url']
-        run_page_url = "https://databricsk.com"
+    def get_link(self, operator, *, ti_key=None):
+
+        task_id = ti_key.task_id.split('.')[-1]
+        run_page_url = XCom.get_one(
+            dag_id=ti_key.dag_id, task_id='get_run_info', run_id=ti_key.run_id
+        )[task_id]['run_page_url']
+
         return run_page_url
 
 
@@ -24,5 +31,5 @@ class DatabricksLogLink(BaseOperatorLink):
 class AirflowExtraLinkPlugin(AirflowPlugin):
     name = "extra_link_plugin"
     operator_extra_links = [
-        DatabricksLogLink(),
+        DatabricksRunLink(),
     ]
