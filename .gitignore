@@ -1,7 +1,6 @@
 .git
 .env
 airflow_settings.yaml
-.astro
 .astrocloud
 .idea
 __pycache__/
