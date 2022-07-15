@@ -3,14 +3,14 @@ import json
 from pprint import pprint
 import os
 
-jobs_ids = [
-    552857564708371,
-    387060766748255,
-    557501144019716
-]
 
+# jobs_ids = [
+#     "552857564708371",
+#     "387060766748255",
+#     "557501144019716"
+# ]
 
-def get_job_info(job_id: int, bearer_token):
+def get_job_info(job_id: str, bearer_token):
     url = f"https://dbc-0eb40f15-5780.cloud.databricks.com/api/2.1/jobs/get?job_id={job_id}"
 
     headers = {
@@ -23,7 +23,6 @@ def get_job_info(job_id: int, bearer_token):
 
 
 def get_dependencies(job_info):
-
     dependencies = {}
     for db_task in job_info:
         depends_on = []
@@ -35,8 +34,12 @@ def get_dependencies(job_info):
 
 
 def run():
+    jobs = json.load(open('include/databricks_jobs.json'))
+
+    job_ids = [v for k, v in jobs.items()]
+
     depends_on = {}
-    for job_id in jobs_ids:
+    for job_id in job_ids:
         job_info = get_job_info(job_id, os.environ['BEARER_TOKEN'])
         dependencies = get_dependencies(job_info)
         depends_on[job_id] = dependencies

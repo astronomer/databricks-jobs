@@ -65,7 +65,6 @@ def databricks_job_operator():
 
         job_info = json.load(open('./include/jobs.json'))
 
-        # TODO: Check for initial delay on sensor start/poke
         # Create Airflow tasks from Databricks Tasks
         db_tasks = {}
         for task_key in job_info[job_id].keys():
@@ -77,7 +76,6 @@ def databricks_job_operator():
                 request_params={
                     "run_id": f"{{{{ ti.xcom_pull(task_ids='get_run_info')['{task_key}']['run_id'] }}}}"},
                 response_check=lambda response: response_check(response.json()),
-                # initial_delay=15
                 # exponential_backoff=True
             )
             db_tasks[task_key] = airflow_task
@@ -92,5 +90,3 @@ def databricks_job_operator():
 
 
 dag = databricks_job_operator()
-
-# TODO: Reruns with repair tracking/integration

@@ -65,7 +65,6 @@ def databricks_job_cicd():
 
         job_info = json.load(open('./include/jobs.json'))
 
-        # TODO: Check for initial delay on sensor start/poke
         # Create Airflow tasks from Databricks Tasks
         db_tasks = {}
         for task_key in job_info[job_id].keys():
@@ -91,5 +90,3 @@ def databricks_job_cicd():
 
 
 dag = databricks_job_cicd()
-
-# TODO: Reruns with repair tracking/integration
