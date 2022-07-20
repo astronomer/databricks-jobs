@@ -118,7 +118,7 @@ for job_name, job_id in job_ids.items():
                     method='GET',
                     endpoint='/api/2.1/jobs/runs/get',
                     request_params={
-                        "run_id": f"{{{{ ti.xcom_pull(task_ids='get_run_info')['{task_key}']['run_id'] }}}}"},
+                        "run_id": f"{{{{ ti.xcom_pull(task_ids='get_run_info')['tasks']['{task_key}']['run_id'] }}}}"},
                     response_check=lambda response: response_check(response.json()),
                     # exponential_backoff=True
                 )
