@@ -82,11 +82,11 @@ class DatabricksRepairRunLink(BaseOperatorLink):
 
 # Creating a flask blueprint to integrate the templates and static folder
 bp = Blueprint(
-    "test_plugin",
+    "databricks_plugin",
     __name__,
     template_folder="templates",  # registers airflow/plugins/templates as a Jinja template folder
     static_folder="static",
-    static_url_path="/static/test_plugin",
+    static_url_path="/static/databricks_plugin",
 )
 
 
@@ -202,7 +202,7 @@ class DatabricksRun(AppBuilderBaseView):
             return redirect("/dags/{dag_id}/grid".format(dag_id=dag_id))
 
         return self.render_template(
-            "test_plugin/test.html",
+            "databricks_plugin/repair.html",
             dag_id=dag_id,
             task_id=task_id.split('.')[-1],
             run_id=run_id,
@@ -224,4 +224,3 @@ class AirflowExtraLinkPlugin(AirflowPlugin):
     ]
     flask_blueprints = [bp]
     appbuilder_views = [v_appbuilder_nomenu_package]
-
