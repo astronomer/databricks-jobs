@@ -1,0 +1,38 @@
+{% extends base_template %}
+
+{% block content %}
+  {{ super() }}
+  <h2>Repair Run</h2>
+
+  <h3>Airflow</h3>
+  <h4>Dag ID: {{ dag_id }}</h4>
+  <h4>Run ID: {{ run_id }}</h4>
+
+  <h3>Databricks</h3>
+  <h4>Job Name: {{ dag_id }}</h4>
+  <h4>Run ID: {{ databricks_run_id }}</h4>
+
+  <h3>Repairable tasks</h3>
+
+  <div>
+    <form method="POST">
+      <div class="form-group">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<!--        <input type="hidden" name="databricks_run_id" value="{{ databricks_run_id }}">-->
+<!--        <input type="hidden" name="dag_id" value="{{ dag_id }}">-->
+        {% for task_key in all_tasks %}
+        <div class="form-check">
+          <input class="form-check-input" name="task_keys" type="checkbox" value="{{ task_key }}" id="{{ task_key }}" checked>
+          <label class="form-check-label" for="{{ task_key }}">
+            {{ task_key }}
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary">OK</button>
+      <button type="button" class="btn" onclick="window.history.back(); return false">Cancel</button>
+    </form>
+  </div>
+
+
+{% endblock %}
