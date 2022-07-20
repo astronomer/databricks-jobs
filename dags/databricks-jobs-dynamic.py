@@ -15,8 +15,20 @@ job_ids = json.load(open('include/databricks_jobs.json'))
 
 
 def response_check(response: dict):
+    """Custom check for HttpSensorAsync tasks used to monitor Databricks Job tasks
+
+    :param response: Response from Databricks Jobs API for task run
+    :type response: str
+
+    :raises AirflowFailException: To fail task if result_state value is not SUCCESS
+
+    :return: Determined based on existence and value of 'result_state' key in response
+    :rtype: bool
+    """
+
     logging.info(response)
 
+    # Check if the response contains key 'result_state' and create return value accordingly
     if response:
         if ('result_state' in response['state']) and (response['state']['result_state'] == 'SUCCESS'):
             return True
@@ -26,6 +38,37 @@ def response_check(response: dict):
             )
     else:
         return False
+
+
+def parse_run_info(run_info):
+    """Parse the response from the 'get_run_info' task to create necessary XCOM data for downstream tasks
+
+    :param run_info: Response from API call in task to Databricks get job run API
+    :type run_info: dict
+
+    :return: Info needed by downstream task group that mirrors databricks job
+    :rtype: dict
+    """
+
+    # Get latest task attempt info - run_id, run_page_url, attempt_number
+    task_attempts = {}
+    for t in run_info['tasks']:
+        if t['task_key'] not in task_attempts:
+            task_attempts[t['task_key']] = {'run_id': t['run_id'], 'run_page_url': t['run_page_url'],
+                                            'attempt_number': t['attempt_number']}
+        else:
+            if t['attempt_number'] > task_attempts[t['task_key']]['attempt_number']:
+                task_attempts[t['task_key']] = {
+                    'run_id': t['run_id'],
+                    'run_page_url': t['run_page_url'],
+                    'attempt_number': t['attempt_number']
+                }
+
+    latest_repair_id = None
+    if "repair_history" in run_info and len(run_info['repair_history']) > 1:
+        print(run_info['repair_history'])
+        latest_repair_id = run_info['repair_history'][-1]['id']
+    return {'tasks': task_attempts, 'latest_repair_id': latest_repair_id}
 
 
 for job_name, job_id in job_ids.items():
@@ -58,10 +101,8 @@ for job_name, job_id in job_ids.items():
             method='GET',
             http_conn_id='http_default',
             endpoint='/api/2.1/jobs/runs/get',
-            data="run_id={{ ti.xcom_pull(task_ids='trigger_job')['run_id'] }}",
-            response_filter=lambda response: {t['task_key']: {'run_id': t['run_id'], 'run_page_url': t['run_page_url']}
-                                              for
-                                              t in response.json()['tasks']}
+            data="run_id={{ ti.xcom_pull(task_ids='trigger_job')['run_id'] }}&include_history=true",
+            response_filter=lambda response: parse_run_info(response.json())
         )
 
         with TaskGroup(group_id='Databricks_Job_Tasks') as job_taskgroup:
