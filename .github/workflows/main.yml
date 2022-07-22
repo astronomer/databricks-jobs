@@ -5,6 +5,7 @@ on:
     paths:
       - 'dags/*'
       - '.scripts/*'
+      - 'include/databricks_jobs.json'
 
 env:
   ## Sets Deployment API key credentials as environment variables

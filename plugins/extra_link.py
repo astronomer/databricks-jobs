@@ -1,6 +1,5 @@
 import json
 from urllib.parse import quote, unquote
-import requests
 
 from airflow.models.taskinstance import TaskInstance, clear_task_instances
 from airflow.plugins_manager import AirflowPlugin
@@ -8,13 +7,12 @@ from airflow.models.baseoperator import BaseOperatorLink
 from airflow.models.xcom import XCom
 from airflow.utils.session import provide_session
 from airflow.utils.state import State
-
+from airflow.configuration import conf
 from astronomer.providers.http.sensors.http import HttpSensorAsync
 from sensors.DatabricksHttpSensorAsync import DatabricksHttpSensorAsync
 
-from flask import Blueprint, request, redirect, url_for
+from flask import Blueprint, request, redirect
 from flask_appbuilder import expose, BaseView as AppBuilderBaseView
-from airflow.hooks.base import BaseHook
 from airflow.providers.http.hooks.http import HttpHook
 
 
@@ -61,7 +59,6 @@ class DatabricksRepairRunLink(BaseOperatorLink):
         if task_instance.state != State.FAILED:
             return ''
 
-
         databricks_run_id = XCom.get_one(
             dag_id=ti_key.dag_id, task_id='trigger_job', run_id=ti_key.run_id
         )['run_id']
@@ -69,6 +66,18 @@ class DatabricksRepairRunLink(BaseOperatorLink):
         latest_repair_id = XCom.get_one(
             dag_id=ti_key.dag_id, task_id='get_run_info', run_id=ti_key.run_id
         )['latest_repair_id']
+
+        # TODO Solve this base URL issue in Astro
+        base_url = conf.get('webserver', 'base_url')
+        if 'astronomer.run' in base_url:
+            return "/{deployment}/databricksrun/repair?dag_id={dag_id}&task_id={task_id}&run_id={run_id}&databricks_run_id={databricks_run_id}&latest_repair_id={latest_repair_id}".format(
+                deployment=base_url.split('/')[-1],
+                dag_id=ti_key.dag_id,
+                task_id=ti_key.task_id,
+                run_id=quote(ti_key.run_id),
+                databricks_run_id=databricks_run_id,
+                latest_repair_id=latest_repair_id
+            )
 
         # If the task is failed then generate link accordingly
         return "/databricksrun/repair?dag_id={dag_id}&task_id={task_id}&run_id={run_id}&databricks_run_id={databricks_run_id}&latest_repair_id={latest_repair_id}".format(
@@ -199,6 +208,13 @@ class DatabricksRun(AppBuilderBaseView):
 
             clear_task_instances(tis=task_instances, session=session)
 
+            base_url = conf.get('webserver', 'base_url')
+            if 'astronomer.run' in base_url:
+                return redirect("/{deployment}/dags/{dag_id}/grid".format(
+                    deployment=base_url.split('/')[-1],
+                    dag_id=dag_id)
+                )
+
             return redirect("/dags/{dag_id}/grid".format(dag_id=dag_id))
 
         return self.render_template(
@@ -207,7 +223,8 @@ class DatabricksRun(AppBuilderBaseView):
             task_id=task_id.split('.')[-1],
             run_id=run_id,
             all_tasks=repair_task_keys,
-            databricks_run_id=databricks_run_id
+            databricks_run_id=databricks_run_id,
+            latest_repair_id=latest_repair_id
         )
 
 
@@ -217,7 +234,7 @@ v_appbuilder_nomenu_package = {"view": v_appbuilder_nomenu_view}
 
 # Defining the plugin class
 class AirflowExtraLinkPlugin(AirflowPlugin):
-    name = "extra_link_plugin"
+    name = "databricks_plugin"
     operator_extra_links = [
         DatabricksRunLink(),
         DatabricksRepairRunLink()
