@@ -15,7 +15,7 @@ Project Contents
   - `dag_builder.py`: Uses the databricks_jobs.json to generate jobs.json file in in the include folder.
 - packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
 - requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
+- plugins: Add custom or community plugins for your project to this folder. It is empty by default.
   - `templates/databricks_plugin/repair.html`: For the repair run webpage in Airflow. Used by the `databricksrun/repair` view and endpoint.
   - `extra_link.py`: Plugin for all Databricks integrations including
     - Databricks Task - Extra link for the databricks run page url for a given task.
