@@ -4,12 +4,6 @@ from pprint import pprint
 import os
 
 
-# jobs_ids = [
-#     "552857564708371",
-#     "387060766748255",
-#     "557501144019716"
-# ]
-
 def get_job_info(job_id: str, bearer_token):
     url = f"https://dbc-0eb40f15-5780.cloud.databricks.com/api/2.1/jobs/get?job_id={job_id}"
 
