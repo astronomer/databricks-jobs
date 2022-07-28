@@ -1,7 +1,8 @@
-import requests
 import json
-from pprint import pprint
 import os
+from pprint import pprint
+
+import requests
 
 
 def get_job_info(job_id: str, bearer_token):
@@ -39,7 +40,7 @@ def run():
         depends_on[job_id] = dependencies
     pprint(depends_on)
 
-    with open('include/jobs.json', 'w') as jobs_file:
+    with open('include/task_dependencies.json', 'w') as jobs_file:
         jobs_file.write(json.dumps(depends_on))
 
 

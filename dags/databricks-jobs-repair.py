@@ -1,19 +1,16 @@
-# TODO: On Retry Callback
-# TODO: On Failure Callback (is this needed?)
-# TODO: If upstream failed make sure its marked as skipped not failed
+# NOTE: This DAG uses the task_dependencies.json to dynamically create the task group that mirrors a databricks job.
+# It does not dynamically create multiple DAGs that mirror multiple databricks jobs. Thus, it needs a job_id variable
+# defined at the top level for the Databricks job it is meant to mirror.
 
 import json
 import logging
 
-from airflow.providers.http.hooks.http import HttpHook
-from airflow.utils.session import provide_session
-from airflow.utils.task_group import TaskGroup
-from pendulum import datetime
-
 from airflow.decorators import dag
-from airflow.providers.http.operators.http import SimpleHttpOperator
-from astronomer.providers.http.sensors.http import HttpSensorAsync
 from airflow.exceptions import AirflowFailException
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.utils.task_group import TaskGroup
+from astronomer.providers.http.sensors.http import HttpSensorAsync
+from pendulum import datetime
 
 # job_id = "552857564708371"
 # job_id = "387060766748255"
@@ -108,11 +105,11 @@ def databricks_job_repair():
 
     with TaskGroup(group_id='Databricks_Job_Tasks') as job_taskgroup:
 
-        job_info = json.load(open('./include/jobs.json'))
+        task_dependencies = json.load(open('./include/task_dependencies.json'))
 
         # Create Airflow tasks from Databricks Tasks
         db_tasks = {}
-        for task_key in job_info[job_id].keys():
+        for task_key in task_dependencies[job_id].keys():
             airflow_task = HttpSensorAsync(
                 task_id=task_key,
                 http_conn_id='http_default',
@@ -126,7 +123,7 @@ def databricks_job_repair():
             db_tasks[task_key] = airflow_task
 
         # Generate task dependencies
-        for task_key, dependencies in job_info[job_id].items():
+        for task_key, dependencies in task_dependencies[job_id].items():
             if dependencies:
                 for upstream in dependencies:
                     db_tasks[upstream] >> db_tasks[task_key]

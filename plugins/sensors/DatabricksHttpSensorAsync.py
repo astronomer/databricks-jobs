@@ -1,8 +1,9 @@
+# NOTE: This is currently not used
+
 from typing import Any, Dict, Optional, Sequence
 
 from airflow.providers.http.sensors.http import HttpSensor
 from airflow.utils.context import Context
-
 from astronomer.providers.http.triggers.http import HttpTrigger
 
 

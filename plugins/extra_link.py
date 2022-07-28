@@ -1,19 +1,19 @@
 import json
 from urllib.parse import quote, unquote
 
-from airflow.models.taskinstance import TaskInstance, clear_task_instances
-from airflow.plugins_manager import AirflowPlugin
+from airflow.configuration import conf
 from airflow.models.baseoperator import BaseOperatorLink
+from airflow.models.taskinstance import TaskInstance, clear_task_instances
 from airflow.models.xcom import XCom
+from airflow.plugins_manager import AirflowPlugin
+from airflow.providers.http.hooks.http import HttpHook
 from airflow.utils.session import provide_session
 from airflow.utils.state import State
-from airflow.configuration import conf
 from astronomer.providers.http.sensors.http import HttpSensorAsync
-from sensors.DatabricksHttpSensorAsync import DatabricksHttpSensorAsync
-
 from flask import Blueprint, request, redirect
 from flask_appbuilder import expose, BaseView as AppBuilderBaseView
-from airflow.providers.http.hooks.http import HttpHook
+
+from sensors.DatabricksHttpSensorAsync import DatabricksHttpSensorAsync  # Currently, not used in a dag
 
 
 class DatabricksRunLink(BaseOperatorLink):
@@ -142,7 +142,7 @@ class DatabricksRun(AppBuilderBaseView):
 
             print(task_keys)
 
-            # Build request paramters for Databricks Jobs repair run API
+            # Build request parameters for Databricks Jobs repair run API
             request_body = {'run_id': databricks_run_id, 'rerun_tasks': task_keys}
             if latest_repair_id != 'None':
                 request_body['latest_repair_id'] = latest_repair_id
