@@ -1,7 +1,3 @@
-# NOTE: This DAG uses the task_dependencies.json to dynamically create the task group that mirrors a databricks job.
-# It does not dynamically create multiple DAGs that mirror multiple databricks jobs. Thus, it needs a job_id variable
-# defined at the top level for the Databricks job it is meant to mirror.
-
 import json
 import logging
 
@@ -83,6 +79,10 @@ def parse_run_info(run_info):
 def databricks_job_repair():
     """
     Executing and viewing your Databricks Jobs from Airflow
+
+    NOTE: This DAG uses the task_dependencies.json to dynamically create the task group that mirrors a databricks
+    job. It does not dynamically create multiple DAGs that mirror multiple databricks jobs. Thus, it needs a job_id
+    variable defined at the top level for the Databricks job it is meant to mirror.
     """
 
     trigger_job = SimpleHttpOperator(
@@ -91,7 +91,7 @@ def databricks_job_repair():
         http_conn_id='http_default',
         endpoint='/api/2.1/jobs/run-now',
         data=json.dumps({'job_id': job_id}),
-        response_filter=lambda response: response.json(),
+        response_filter=lambda response: response.json()
     )
 
     get_run_info = SimpleHttpOperator(

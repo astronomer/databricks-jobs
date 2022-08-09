@@ -1,7 +1,3 @@
-# NOTE: This DAG uses the task_dependencies.json to dynamically create the task group that mirrors a databricks job.
-# It does not dynamically create multiple DAGs that mirror multiple databricks jobs. Thus, it needs a job_id variable
-# defined at the top level for the Databricks job it is meant to mirror.
-
 import json
 import logging
 
@@ -162,7 +158,12 @@ job_config = {
 )
 def databricks_job_create():
     """
-    Executing and viewing your Databricks Jobs from Airflow
+    Executing and viewing your Databricks Jobs from Airflow.
+
+    NOTE: This DAG uses the `job_config` dict defined in this file to dynamically create the databricks job and the
+    task group that mirrors a databricks job. It does not dynamically create multiple DAGs that mirror multiple
+    databricks jobs. Thus, it needs a job_config variable defined at the top level for the Databricks job it is meant to
+    create and then mirror.
     """
 
     create_job = SimpleHttpOperator(
