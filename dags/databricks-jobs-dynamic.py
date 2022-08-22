@@ -89,8 +89,7 @@ for job_name, job_id in job_ids.items():
             http_conn_id='http_default',
             endpoint='/api/2.1/jobs/run-now',
             data=json.dumps({'job_id': job_id}),
-            response_filter=lambda response: response.json(),
-
+            response_filter=lambda response: response.json()
         )
 
         get_run_info = SimpleHttpOperator(

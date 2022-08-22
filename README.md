@@ -5,8 +5,9 @@ Dynamic Airflow Dags with Airflow fom Databricks Jobs with repair run functional
 Project Contents
 ================
 - dags: 
-  - `databricks-jobs-repair.py` - Single dag that dynamically generates as task group that mirrors a specified databricks job
+  - `databricks-jobs-repair.py` - Single DAG that dynamically generates as task group that mirrors a specified databricks job
   - `databricks-jobs-dynamic.py` - Dynamic DAG that generates a separate DAG for each job in `include/databricks_jobs.json`
+  - `databricks-jobs-createjob.py` - DAG that creates a databricks job based on a predefined `job_config` dict and then triggers and tracks it in Airflow.
 - Dockerfile: This file contains a versioned Astronomer Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
 - include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
   - `databricks_jobs.json`: File that end users maintains that contains Databricks job name and job id so that CICD can generate task dependency information used by dags to mirror Databricks jobs.
@@ -23,6 +24,8 @@ Project Contents
     - DatabricksRun View - Flask view for the repair run functionality 
     - Blueprint - Flask blueprint for plugin
 - airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+- .github/workflows:
+  - `main.yml` - CICD for the dynamic DAG to get job task details from Databricks API and deploy DAGs to Astro.
 
 Additional Requirements
 =======================
