@@ -24,6 +24,8 @@ Project Contents
     - DatabricksRun View - Flask view for the repair run functionality 
     - Blueprint - Flask blueprint for plugin
 - airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+- .github/workflows:
+  - `main.yml` - CICD for the dynamic DAG to get job task details from Databricks API and deploy DAGs to Astro.
 
 Additional Requirements
 =======================

@@ -163,7 +163,7 @@ def databricks_job_create():
     NOTE: This DAG uses the `job_config` dict defined in this file to dynamically create the databricks job and the
     task group that mirrors a databricks job. It does not dynamically create multiple DAGs that mirror multiple
     databricks jobs. Thus, it needs a job_config variable defined at the top level for the Databricks job it is meant to
-    create and then mirror.
+    create, mirror, and run.
     """
 
     create_job = SimpleHttpOperator(
